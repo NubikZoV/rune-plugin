@@ -109,11 +109,11 @@ public class RuneManager {
         if (rune != null) {
             playerRunes.put(player.getUniqueId(), rune);
             applyRuneEffects(player, rune);
-            // Apply purple weapon speed if switching to purple
+            // Apply purple weapon speed immediately after applying effects
             if (rune == RuneType.PURPLE) {
-                Bukkit.getScheduler().runTaskLater(RunePlugin.getInstance(), () ->
-                    RunePlugin.getInstance().getPurpleRuneListener().applyWeaponSpeedModifier(player)
-                , 2L);
+                plugin.getServer().getScheduler().runTask(plugin, () ->
+                    plugin.getPurpleRuneListener().applyWeaponSpeedModifier(player)
+                );
             }
         } else {
             playerRunes.remove(player.getUniqueId());
