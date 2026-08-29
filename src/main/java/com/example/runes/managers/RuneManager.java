@@ -2,11 +2,16 @@ package com.example.runes.managers;
 
 import com.example.runes.RunePlugin;
 import com.example.runes.RuneType;
+import io.papermc.paper.event.player.PlayerInventorySlotChangeEvent;
+import io.papermc.paper.event.player.PlayerPickItemEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -31,6 +36,8 @@ public class RuneManager {
 
     // Green rune: extra health modifier key
     public static final String GREEN_HEALTH_KEY = "rune.green.health";
+
+    public static final String Mace = "item.minecraft.mace";
 
     private BukkitTask tickTask;
 
@@ -224,6 +231,15 @@ public class RuneManager {
             greenAxeHits.put(id, new long[]{now, 1});
             return false;
         }
+    }
+    @EventHandler
+    public void MaceEnchantmentsDestroyer(PlayerInventorySlotChangeEvent event){
+        Player govnoed = event.getPlayer();
+        if(plugin.getRuneManager().hasRune(govnoed, RuneType.RED) || !(Mace.equals(event.getNewItemStack().toString()))) return;
+        System.out.println(event.getNewItemStack().toString());
+        ItemMeta meta= event.getNewItemStack().getItemMeta();
+        meta.getEnchants().keySet().forEach(meta::removeEnchant);
+
     }
 
     // ──────────────────────────────────────────────────────────────
