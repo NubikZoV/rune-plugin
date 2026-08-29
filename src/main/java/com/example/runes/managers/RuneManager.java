@@ -172,21 +172,21 @@ public class RuneManager {
     // ──────────────────────────────────────────────────────────────
 
     private void applyPurpleEffects(Player player) {
-        // +15% movement speed
+        // +25% movement speed
         var speedAttr = player.getAttribute(Attribute.MOVEMENT_SPEED);
         if (speedAttr != null) {
             removeModifier(speedAttr, PURPLE_SPEED_KEY);
             AttributeModifier speedMod = new AttributeModifier(
-                    purpleSpeedKey(), 0.15, AttributeModifier.Operation.ADD_SCALAR);
+                    purpleSpeedKey(), 0.25, AttributeModifier.Operation.ADD_SCALAR);
             speedAttr.addModifier(speedMod);
         }
 
-        // +15% attack speed (generic.attack_speed) — "haste" equivalent
+        // +25% attack speed (generic.attack_speed) — "haste" equivalent
         var attackAttr = player.getAttribute(Attribute.ATTACK_SPEED);
         if (attackAttr != null) {
             removeModifier(attackAttr, PURPLE_HASTE_KEY);
             AttributeModifier hasteMod = new AttributeModifier(
-                    purpleHasteKey(), 0.15, AttributeModifier.Operation.ADD_SCALAR);
+                    purpleHasteKey(), 0.25, AttributeModifier.Operation.ADD_SCALAR);
             attackAttr.addModifier(hasteMod);
         }
     }
@@ -197,11 +197,9 @@ public class RuneManager {
         var attackAttr = player.getAttribute(Attribute.ATTACK_SPEED);
         if (attackAttr != null) {
             removeModifier(attackAttr, PURPLE_HASTE_KEY);
-            // Also remove weapon-specific speed modifier
-            attackAttr.getModifiers().stream()
-                    .filter(m -> m.key().value().equals("purple_weapon_speed"))
-                    .forEach(attackAttr::removeModifier);
         }
+        // Also remove weapon-specific speed modifier via PurpleRuneListener
+        plugin.getPurpleRuneListener().removeWeaponSpeedModifier(player);
     }
 
     // ──────────────────────────────────────────────────────────────
