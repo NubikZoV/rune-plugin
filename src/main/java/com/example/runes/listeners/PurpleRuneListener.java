@@ -2,8 +2,7 @@ package com.example.runes.listeners;
 
 import com.example.runes.RunePlugin;
 import com.example.runes.RuneType;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
@@ -11,17 +10,22 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.UUID;
 
 /**
  * PURPLE RUNE:
- * 1. +25% movement speed (via attribute modifier)
- * 2. +25% attack speed/haste (via attribute modifier)
+ * 1. +15% movement speed (via attribute, handled in RuneManager)
+ * 2. +15% attack speed (via attribute, handled in RuneManager)
  * 3. Sword attack speed → 1.7, Any axe attack speed → 1.1
+ *    (done via item attribute on held item — applied per slot switch)
  */
 public class PurpleRuneListener implements Listener {
 
     private final RunePlugin plugin;
-    private static final String WEAPON_SPEED_KEY = "purple_weapon_speed";
+    private static final String SWORD_SPEED_KEY = "rune.purple.sword_speed";
+    private static final String AXE_SPEED_KEY = "rune.purple.axe_speed";
 
     public PurpleRuneListener(RunePlugin plugin) {
         this.plugin = plugin;
@@ -29,10 +33,13 @@ public class PurpleRuneListener implements Listener {
 
     /**
      * When player switches held item, update the ATTACK_SPEED attribute
-     * to set weapon-specific attack speeds.
-     * 
-     * Sword base attack speed = 4.0 → set to 1.7
-     * Axe base attack speed = 4.0 → set to 1.1
+     * directly on the Player to simulate weapon-specific speeds.
+     *
+     * Sword base attack speed in vanilla = 1.6 (per tick recharge).
+     * Axe base varies: 0.8–1.0 depending on tier.
+     * We override ATTACK_SPEED attribute: swords → 1.7, axes → 1.1
+     *
+     * We remove the previous weapon modifier and add the new one.
      */
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent e) {
@@ -46,11 +53,7 @@ public class PurpleRuneListener implements Listener {
     }
 
     public void applyWeaponSpeedModifier(Player player) {
-        if (!plugin.getRuneManager().hasRune(player, RuneType.PURPLE)) {
-            // Remove weapon speed modifier if rune is no longer active
-            removeWeaponSpeedModifier(player);
-            return;
-        }
+        if (!plugin.getRuneManager().hasRune(player, RuneType.PURPLE)) return;
 
         ItemStack item = player.getInventory().getItemInMainHand();
         Material mat = item.getType();
@@ -59,7 +62,9 @@ public class PurpleRuneListener implements Listener {
         if (attr == null) return;
 
         // Remove previous purple weapon modifier
-        removeWeaponSpeedModifier(player);
+        attr.getModifiers().stream()
+                .filter(m -> m.key().value().equals("purple_weapon_speed"))
+                .forEach(attr::removeModifier);
 
         double targetSpeed = -1;
 
@@ -71,25 +76,18 @@ public class PurpleRuneListener implements Listener {
 
         if (targetSpeed < 0) return;
 
-        // Base attack speed for player is 4.0
-        // We want final value = targetSpeed
-        // Using ADD_NUMBER: finalValue = base + mod → mod = targetSpeed - base
+        // Calculate modifier needed:
+        // base attack speed for player = 4.0
+        // targetSpeed = base + (base * scalar) or base + flat
+        // AttributeModifier.Operation.ADD_NUMBER: finalValue = base + mod
+        // We want: finalValue = targetSpeed → mod = targetSpeed - base (4.0)
         double base = attr.getBaseValue(); // should be 4.0
         double flatMod = targetSpeed - base;
 
-        NamespacedKey key = new NamespacedKey(plugin, WEAPON_SPEED_KEY);
+        NamespacedKey key = new NamespacedKey(plugin, "purple_weapon_speed");
         AttributeModifier mod = new AttributeModifier(key, flatMod,
                 AttributeModifier.Operation.ADD_NUMBER);
         attr.addModifier(mod);
-    }
-
-    public void removeWeaponSpeedModifier(Player player) {
-        var attr = player.getAttribute(Attribute.ATTACK_SPEED);
-        if (attr == null) return;
-
-        attr.getModifiers().stream()
-                .filter(m -> m.key().value().equals(WEAPON_SPEED_KEY))
-                .forEach(attr::removeModifier);
     }
 
     private boolean isSword(Material mat) {
