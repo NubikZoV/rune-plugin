@@ -1,0 +1,26 @@
+name: RunePlugin
+version: 1.0.0
+main: com.example.runes.RunePlugin
+api-version: '26.1'
+description: Rune system plugin for Paper 26.1
+
+commands:
+  rune:
+    description: Choose your rune
+    usage: /rune [red|blue|green|orange|purple]
+    permission: runes.use
+  rain:
+    description: Call rain (Blue rune only)
+    usage: /rain
+    permission: runes.rain
+
+permissions:
+  runes.use:
+    description: Allows using /rune
+    default: true
+  runes.rain:
+    description: Allows using /rain
+    default: true
+  runes.admin:
+    description: Admin rune commands
+    default: op
