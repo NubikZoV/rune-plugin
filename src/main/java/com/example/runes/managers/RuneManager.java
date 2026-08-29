@@ -99,6 +99,12 @@ public class RuneManager {
 
     public void setPlayerRune(Player player, RuneType rune) {
         RuneType old = playerRunes.get(player.getUniqueId());
+        
+        // Если игрок выбирает ту же руну, просто обновляем GUI и выходим
+        if (old == rune) {
+            return;
+        }
+        
         if (old != null) removeRuneEffects(player, old);
         if (rune != null) {
             playerRunes.put(player.getUniqueId(), rune);
